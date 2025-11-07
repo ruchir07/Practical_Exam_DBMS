@@ -13,6 +13,7 @@ public class myClass {
 
         // Connect to MongoDB
         MongoClient mongo = MongoClients.create("mongodb://localhost:27017");
+        // MongoClient mongo = new MongoClient("127.0.0.1",27017);
         System.out.println("✅ Connection established successfully!");
 
         // Use existing database and collection

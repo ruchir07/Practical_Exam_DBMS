@@ -1,0 +1,85 @@
+Table Creation-
+
+CREATE TABLE Borrower (
+    Roll INT,
+    Name VARCHAR(50),
+    DateOfIssue DATE,
+    NameOfBook VARCHAR(100),
+    Status CHAR(1)   -- 'I' for Issued, 'R' for Returned
+);
+
+CREATE TABLE Fine (
+    Roll INT,
+    DateOfReturn DATE,
+    Amt DECIMAL(10,2)
+);
+
+
+DELIMITER $$
+
+CREATE PROCEDURE Return_Book(
+    IN p_Roll INT,
+    IN p_BookName VARCHAR(100)
+)
+BEGIN
+    DECLARE v_DateOfIssue DATE;
+    DECLARE v_days INT;
+    DECLARE v_fine DECIMAL(10,2);
+    DECLARE v_count INT;
+    DECLARE v_fineExists INT;
+    DECLARE v_Status CHAR(1);
+
+    -- Step 1: Check if record exists
+    SELECT COUNT(*) INTO v_count
+    FROM Borrower
+    WHERE Roll = p_Roll AND NameOfBook = p_BookName;
+
+    IF v_count = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = '❌ No such book issued for this Roll number.';
+    ELSE
+        -- Step 2: Get DateOfIssue and Status
+        SELECT DateOfIssue, Status INTO v_DateOfIssue, v_Status
+        FROM Borrower
+        WHERE Roll = p_Roll AND NameOfBook = p_BookName;
+
+        -- Step 3: Prevent re-returning
+        IF v_Status = 'R' THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = '⚠️ Book already returned earlier!';
+        END IF;
+
+        -- Step 4: Calculate number of days
+        SET v_days = DATEDIFF(CURDATE(), v_DateOfIssue);
+
+        -- Step 5: Fine calculation
+        IF v_days <= 15 THEN
+            SET v_fine = 0;
+        ELSEIF v_days > 15 AND v_days <= 30 THEN
+            SET v_fine = (v_days - 15) * 5;
+        ELSE
+            SET v_fine = (15 * 5) + ((v_days - 30) * 50);
+        END IF;
+
+        -- Step 6: Update status
+        UPDATE Borrower
+        SET Status = 'R'
+        WHERE Roll = p_Roll AND NameOfBook = p_BookName;
+
+        -- Step 7: Check if fine already exists
+        SELECT COUNT(*) INTO v_fineExists
+        FROM Fine
+        WHERE Roll = p_Roll AND DateOfReturn = CURDATE();
+
+        -- Step 8: Insert fine only if not already added
+        IF v_fine > 0 AND v_fineExists = 0 THEN
+            INSERT INTO Fine(Roll, DateOfReturn, Amt)
+            VALUES(p_Roll, CURDATE(), v_fine);
+        END IF;
+
+        -- Step 9: Show result message
+        SELECT CONCAT('✅ Book Returned Successfully. Fine = Rs ', v_fine) AS Message;
+    END IF;
+END$$
+
+DELIMITER ;

@@ -1,0 +1,56 @@
+Main Table: Library
+CREATE TABLE Library (
+    BookID INT PRIMARY KEY,
+    BookName VARCHAR(100),
+    Author VARCHAR(100),
+    Price DECIMAL(8,2)
+);
+
+Audit Table: Library_Audit
+CREATE TABLE Library_Audit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    BookID INT,
+    BookName VARCHAR(100),
+    Author VARCHAR(100),
+    Price DECIMAL(8,2),
+    OperationType VARCHAR(10),
+    OperationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER $$
+
+CREATE TRIGGER after_library_update
+AFTER UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (BookID, BookName, Author, Price, OperationType)
+    VALUES (OLD.BookID, OLD.BookName, OLD.Author, OLD.Price, 'UPDATE');
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER after_library_delete
+AFTER DELETE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (BookID, BookName, Author, Price, OperationType)
+    VALUES (OLD.BookID, OLD.BookName, OLD.Author, OLD.Price, 'DELETE');
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER before_library_update
+BEFORE UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    IF NEW.Price < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = '❌ Price cannot be negative!';
+    END IF;
+END$$
+
+DELIMITER ;

@@ -1,0 +1,58 @@
+Table Creation - 
+
+CREATE TABLE Stud_Marks (
+    Roll INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(50),
+    Total_Marks INT
+);
+
+CREATE TABLE Result (
+    Roll INT,
+    Name VARCHAR(50),
+    Class VARCHAR(30)
+);
+
+
+Stored Procedure - 
+
+DELIMITER //
+CREATE PROCEDURE proc_Grade(IN p_Roll INT)
+BEGIN
+DECLARE v_class varchar(30);
+DECLARE v_totalMarks INT;
+DECLARE v_Name varchar(50);
+
+IF p_Roll < 0 THEN
+ SIGNAL SQLSTATE '45000'
+ SET MESSAGE_TEXT = 'Roll no. Does not exist';
+END IF;
+
+select name,Total_Marks into v_Name,v_totalMarks
+from Stud_Marks
+where p_Roll = Roll;
+
+IF v_totalMarks > 1500 OR v_totalMarks < 0 THEN
+ SIGNAL SQLSTATE '45000'
+ SET MESSAGE_TEXT = 'Marks out of Range';
+END IF;
+
+
+IF v_totalMarks >= 990 AND v_totalMarks <= 1500 THEN
+	SET v_class = "Distinction";
+ELSEIF v_totalMarks >= 989 AND v_totalMarks <= 900 THEN
+	SET v_class = "First Class";
+ELSEIF v_totalMarks >= 899 AND v_totalMarks <= 825 THEN
+	SET v_class = "Higher Second Class";
+ELSE
+	SET v_class = "Third Class";
+END IF;
+
+INSERT INTO Result(Roll,Name,Class) values
+(p_Roll,v_Name,v_class);
+
+Select CONCAT("Result added to Result table for Roll no:",p_Roll);
+END//
+
+DELIMITER ;
+
+call proc_Grade(Roll_no);

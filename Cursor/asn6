@@ -1,0 +1,65 @@
+CREATE TABLE old_emp(
+  emp_id INT,
+  emp_name VARCHAR(50),
+  city VARCHAR(50)
+);
+
+CREATE TABLE new_emp(
+  emp_id INT,
+  emp_name VARCHAR(50),
+  city VARCHAR(50)
+);
+
+INSERT INTO old_emp VALUES
+(1, 'Employee1', 'Pune'),
+(2, 'Employee2', 'Mumbai'),
+(3, 'Employee3', 'Banglore');
+
+INSERT INTO new_emp VALUES
+(1, 'Employee1', 'Pune'),
+(2, 'Employee2', 'Mumbai'),
+(3, 'Employee3', 'Banglore'),
+(4, 'ddwdwdwdwdw', 'Pune'),
+(5, 'Employee5', 'Banglore'),
+(6, 'Ved', 'Banglore');
+
+Main Logic-
+
+
+DELIMITER //
+
+CREATE PROCEDURE merge_employees()
+BEGIN
+DECLARE done INT DEFAULT 0;
+DECLARE v_id INT;
+DECLARE v_name varchar(50);
+DECLARE v_city varchar(50);
+
+DECLARE cur CURSOR FOR
+select emp_id,emp_name,city from new_emp;
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	select 'SQL Exception caught and stopped' as Message;
+
+OPEN cur;
+
+read_loop:LOOP
+FETCH cur into v_id,v_name,v_city;
+
+IF done THEN
+	LEAVE read_loop;
+END IF;
+
+IF NOT EXISTS (select * from old_emp where emp_id = v_id) THEN
+	INSERT into old_emp values(v_id,v_name,v_city);
+ELSE
+	select CONCAT('DUPLICATE ENTRY FOUND FOR ID:',v_id,' Name:',v_name) as Message;
+END IF;
+
+END LOOP;
+CLOSE cur;
+
+END //
+DELIMITER ;
