@@ -1,0 +1,17 @@
+var mapFunction = function() {
+  emit(this.category, this.price * this.quantity);
+};
+
+
+var reduceFunction = function(keyCategory, values) {
+  return Array.sum(values);
+};
+
+
+db.sales.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "category_revenue" }
+)
+
+db.category_revenue.find().pretty()

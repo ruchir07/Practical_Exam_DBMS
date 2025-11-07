@@ -1,0 +1,44 @@
+db.students.insertMany([
+  { _id: 1, name: "Ravi", age: 21, marks: 88, subjects: ["Math", "Physics"], city: "Pune" },
+  { _id: 2, name: "Sneha", age: 22, marks: 92, subjects: ["Chemistry", "Biology"], city: "Mumbai" },
+  { _id: 3, name: "Arjun", age: 20, marks: 75, subjects: ["Math", "Chemistry"], city: "Delhi" },
+  { _id: 4, name: "Priya", age: 23, marks: 65, subjects: ["Biology", "Physics"], city: "Pune" },
+  { _id: 5, name: "Vikas", age: 21, marks: 55, subjects: ["Math", "English"], city: "Chennai" },
+  { _id: 6, name: "Asha", age: 22, marks: 45, subjects: ["History", "English"], city: "Bangalore" }
+])
+
+
+
+1️⃣ Read (Find) — using operators
+// $eq — equal
+db.students.find({ city: { $eq: "Pune" } })
+
+// $gt — greater than
+db.students.find({ marks: { $gt: 70 } })
+
+// $lt — less than
+db.students.find({ age: { $lt: 22 } })
+
+// $ne — not equal
+db.students.find({ city: { $ne: "Mumbai" } })
+
+// $in — match any from list
+db.students.find({ city: { $in: ["Pune", "Delhi"] } })
+
+// $nin — not in
+db.students.find({ city: { $nin: ["Pune", "Delhi"] } })
+
+// $and — both conditions true
+db.students.find({ $and: [ { marks: { $gt: 60 } }, { city: "Pune" } ] })
+
+// $or — any one condition true
+db.students.find({ $or: [ { marks: { $lt: 60 } }, { city: "Mumbai" } ] })
+
+// $not — negate condition
+db.students.find({ marks: { $not: { $gt: 80 } } })
+
+// $nor — none of the conditions true
+db.students.find({ $nor: [ { city: "Pune" }, { marks: { $gt: 90 } } ] })
+
+// $all — array contains all specified elements
+db.students.find({ subjects: { $all: ["Math", "Physics"] } })

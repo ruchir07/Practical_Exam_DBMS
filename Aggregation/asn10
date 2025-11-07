@@ -1,0 +1,96 @@
+$match
+db.movieReviews.aggregate([
+  { $match: { rating: { $gt: 8.5 } } }
+])
+
+$project
+db.movieReviews.aggregate([
+  { $project: { movieTitle: 1, rating: 1, _id: 0 } }
+])
+
+$count
+db.movieReviews.aggregate([
+  { $match: { genre: "Sci-Fi" } },
+  { $count: "sciFiMovies" }
+])
+
+$set
+db.movieReviews.aggregate([
+  { $set: { decade: { $cond: [{ $lt: ["$year", 2015] }, "Old", "New"] } } }
+])
+
+$unset
+db.movieReviews.aggregate([
+  { $unset: ["reviewText", "comments"] }
+])
+
+$merge
+db.movieReviews.aggregate([
+  { $match: { rating: { $gt: 8.5 } } },
+  { $merge: { into: "topMovies" } }
+])
+
+$out
+db.movieReviews.aggregate([
+  { $project: { movieTitle: 1, rating: 1 } },
+  { $out: "movieRatingsOnly" }
+])
+
+$sort
+db.movieReviews.aggregate([
+  { $sort: { rating: -1 } }
+])
+
+$limit
+db.movieReviews.aggregate([
+  { $sort: { rating: -1 } },
+  { $limit: 3 }
+])
+
+$skip
+db.movieReviews.aggregate([
+  { $sort: { rating: -1 } },
+  { $skip: 2 }
+])
+
+$unwind
+db.movieReviews.aggregate([
+  { $unwind: "$comments" },
+  { $project: { movieTitle: 1, comments: 1 } }
+])
+
+$addFields
+db.movieReviews.aggregate([
+  { $addFields: { likeToRatingRatio: { $divide: ["$likes", "$rating"] } } }
+])
+
+$lookup
+
+You’ll need another collection for this — let’s create reviewers:
+
+db.reviewers.insertMany([
+  { name: "Ravi", country: "India" },
+  { name: "Sneha", country: "India" },
+  { name: "Priya", country: "USA" },
+  { name: "Vikas", country: "UK" },
+  { name: "Asha", country: "Canada" }
+])
+
+
+Now run:
+
+db.movieReviews.aggregate([
+  {
+    $lookup: {
+      from: "reviewers",
+      localField: "reviewer",
+      foreignField: "name",
+      as: "reviewerDetails"
+    }
+  }
+])
+
+$group
+db.movieReviews.aggregate([
+  { $group: { _id: "$reviewer", avgRating: { $avg: "$rating" }, totalLikes: { $sum: "$likes" } } }
+])
